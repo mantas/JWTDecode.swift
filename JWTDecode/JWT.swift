@@ -37,7 +37,7 @@ public protocol JWT {
 
 
     /// value of `exp` claim if available
-    var expiresAt: NSDate? { get }
+    var expiresAt: Date? { get }
     /// value of `iss` claim if available
     var issuer: String? { get }
     /// value of `sub` claim if available
@@ -45,9 +45,9 @@ public protocol JWT {
     /// value of `aud` claim if available
     var audience: [String]? { get }
     /// value of `iat` claim if available
-    var issuedAt: NSDate? { get }
+    var issuedAt: Date? { get }
     /// value of `nbf` claim if available
-    var notBefore: NSDate? { get }
+    var notBefore: Date? { get }
     /// value of `jti` claim if available
     var identifier: String? { get }
 
@@ -63,7 +63,7 @@ public extension JWT {
 
     :returns: the value of the claim as the generic type `T` if available
     */
-    public func claim<T>(name: String) -> T? {
+    public func claim<T>(_ name: String) -> T? {
         return self.body[name] as? T
     }
 }

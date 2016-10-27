@@ -30,7 +30,7 @@ If the token cannot be decoded a `NSError` will be thrown.
 
 :returns: a decoded token as an instance of JWT
 */
-public func decode(jwt: String) throws -> JWT {
+public func decode(_ jwt: String) throws -> JWT {
     return try DecodedJWT(jwt: jwt)
 }
 
@@ -42,7 +42,7 @@ struct DecodedJWT: JWT {
     let stringValue: String
 
     init(jwt: String) throws {
-        let parts = jwt.componentsSeparatedByString(".")
+        let parts = jwt.components(separatedBy: ".")
         guard parts.count == 3 else {
             throw invalidPartCountInJWT(jwt, parts: parts.count)
         }
@@ -53,7 +53,7 @@ struct DecodedJWT: JWT {
         self.stringValue = jwt
     }
 
-    var expiresAt: NSDate? { return claim("exp") }
+    var expiresAt: Date? { return claim("exp") }
     var issuer: String? { return claim("iss") }
     var subject: String? { return claim("sub") }
     var audience: [String]? {
@@ -62,46 +62,46 @@ struct DecodedJWT: JWT {
         }
         return [aud]
     }
-    var issuedAt: NSDate? { return claim("iat") }
-    var notBefore: NSDate? { return claim("nbf") }
+    var issuedAt: Date? { return claim("iat") }
+    var notBefore: Date? { return claim("nbf") }
     var identifier: String? { return claim("jti") }
 
-    private func claim(name: String) -> NSDate? {
+    fileprivate func claim(_ name: String) -> Date? {
         guard let timestamp:Double = claim(name) else {
             return nil
         }
-        return NSDate(timeIntervalSince1970: timestamp)
+        return Date(timeIntervalSince1970: timestamp)
     }
 
     var expired: Bool {
         guard let date = self.expiresAt else {
             return false
         }
-        return date.compare(NSDate()) != NSComparisonResult.OrderedDescending
+        return date.compare(Date()) != ComparisonResult.orderedDescending
     }
 }
 
-private func base64UrlDecode(value: String) -> NSData? {
+private func base64UrlDecode(_ value: String) -> Data? {
     var base64 = value
-        .stringByReplacingOccurrencesOfString("-", withString: "+")
-        .stringByReplacingOccurrencesOfString("_", withString: "/")
-    let length = Double(base64.lengthOfBytesUsingEncoding(NSUTF8StringEncoding))
+        .replacingOccurrences(of: "-", with: "+")
+        .replacingOccurrences(of: "_", with: "/")
+    let length = Double(base64.lengthOfBytes(using: String.Encoding.utf8))
     let requiredLength = 4 * ceil(length / 4.0)
     let paddingLength = requiredLength - length
     if paddingLength > 0 {
-        let padding = "".stringByPaddingToLength(Int(paddingLength), withString: "=", startingAtIndex: 0)
-        base64 = base64.stringByAppendingString(padding)
+        let padding = "".padding(toLength: Int(paddingLength), withPad: "=", startingAt: 0)
+        base64 = base64 + padding
     }
-    return NSData(base64EncodedString: base64, options: .IgnoreUnknownCharacters)
+    return Data(base64Encoded: base64, options: .ignoreUnknownCharacters)
 }
 
-private func decodeJWTPart(value: String) throws -> [String: AnyObject] {
+private func decodeJWTPart(_ value: String) throws -> [String: AnyObject] {
     guard let bodyData = base64UrlDecode(value) else {
         throw invalidBase64UrlValue(value)
     }
 
     do {
-        guard let json = try NSJSONSerialization.JSONObjectWithData(bodyData, options: NSJSONReadingOptions()) as? [String: AnyObject] else {
+        guard let json = try JSONSerialization.jsonObject(with: bodyData, options: JSONSerialization.ReadingOptions()) as? [String: AnyObject] else {
             throw invalidJSONValue(value)
         }
         return json

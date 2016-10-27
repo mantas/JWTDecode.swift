@@ -179,7 +179,7 @@ class JWTDecodeSpec: QuickSpec {
     }
 }
 
-public func beDecodeErrorWithCode(code: DecodeErrorCode) -> NonNilMatcherFunc<ErrorType> {
+public func beDecodeErrorWithCode(_ code: DecodeErrorCode) -> NonNilMatcherFunc<ErrorType> {
     return NonNilMatcherFunc { (actualExpression, failureMessage) throws in
         failureMessage.postfixMessage = "be decode error with code <\(code)>"
         guard let actual = try actualExpression.evaluate() else {
